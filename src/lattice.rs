@@ -32,15 +32,36 @@ impl Lattice {
         }
     }
 
-    pub fn draw_line(&mut self, p1: &point::Point, p2: &point::Point) {
-        let line = line::line(p1, p2);
-        for pt in line {
-            self.data[pt.y][pt.x] = '#';
+    pub fn draw_line(&self, root: &point::Point, is_horizontal: bool, length: usize) -> Vec<point::Point> {
+        let line: Vec<point::Point>;
+
+        if is_horizontal && !(root.x + length >= self.width && root.x + length < self.width) {
+            line = line::line(&root, &point::Point::new(root.x + length, root.y));
+        } else if !(root.y + length >= self.height && root.y + length < self.height) {
+            line = line::line(&root, &point::Point::new(root.x, root.y + length));
+        } else {
+            line = line::line(&root, &root);
         }
+        return line;
     }
 
-    fn generate_segment(&mut self) {
-        let root = self.generate_wall();
+    pub fn generate_segment(&mut self) -> wall::Wall {
+        let mut root = self.generate_wall();
+        root.child = self.generate_child(&root);
+
+        return root;
+    }
+
+    fn generate_child(&self, wall: &wall::Wall) -> Option<Box<wall::Wall>> {
+        let child_index = rand::thread_rng().gen_range(-1..wall.length as i64) as i64;
+        if child_index < 0 {
+            return None;
+        } else {
+            let child_length = rand::thread_rng().gen_range(1..5) as usize;
+            let line = self.draw_line(&wall.points[child_index as usize], !wall.is_horizontal, child_length);
+
+            return Some(Box::new(wall::Wall::new(line, child_length, !wall.is_horizontal, None)));
+        }
     }
 
     pub fn generate_wall(&self) -> wall::Wall {
@@ -48,18 +69,10 @@ impl Lattice {
                                      rand::thread_rng().gen_range(0..self.width) as usize);
         let length = rand::thread_rng().gen_range(1..5) as usize;
         let is_horizontal = rand::thread_rng().gen_range(0..2) != 0;
-        println!("{}", is_horizontal);
 
-        let line: Vec<point::Point>;
-        if is_horizontal && !(root.x + length >= self.width ) {
-            line = line::line(&root, &point::Point::new(root.x + length, root.y));
-        } else if !(root.y + length >= self.height ) {
-            line = line::line(&root, &point::Point::new(root.x, root.y + length));
-        } else {
-            line = line::line(&root, &root);
-        }
-
-        return wall::Wall::new(line, length);
+        let line = self.draw_line(&root, is_horizontal, length);
+        
+        return wall::Wall::new(line, length, is_horizontal, None);
     }
 }
 
