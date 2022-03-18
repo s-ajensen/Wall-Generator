@@ -1,8 +1,8 @@
 use crate::point;
 
 pub struct Wall {
-    points: Vec<point::Point>,
-    length: usize
+    pub points: Vec<point::Point>,
+    pub length: usize
 }
 
 impl Wall {
