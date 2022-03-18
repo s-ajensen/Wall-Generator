@@ -1,6 +1,7 @@
 mod point;
 mod lattice;
 mod line;
+mod wall;
 
 fn main() {
     

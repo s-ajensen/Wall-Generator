@@ -2,6 +2,7 @@ use colored::Colorize;
 use rand::Rng;
 use crate::line;
 use crate::point;
+use crate::wall;
 
 pub struct Lattice {
     width: usize,
@@ -39,10 +40,10 @@ impl Lattice {
     }
 
     fn generate_segment(&mut self) {
-        
+        let root = self.generate_wall();
     }
 
-    pub fn generate_wall(&self) -> Vec<point::Point> {
+    pub fn generate_wall(&self) -> wall::Wall {
         let root = point::Point::new(rand::thread_rng().gen_range(0..self.height) as usize,
                                      rand::thread_rng().gen_range(0..self.width) as usize);
         let length = rand::thread_rng().gen_range(1..5) as usize;
@@ -58,7 +59,7 @@ impl Lattice {
             line = line::line(&root, &root);
         }
 
-        return line;
+        return wall::Wall::new(line, length);
     }
 }
 
