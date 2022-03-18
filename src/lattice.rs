@@ -32,7 +32,7 @@ impl Lattice {
         }
     }
 
-    pub fn draw_line(&self, root: &point::Point, is_horizontal: bool, length: usize) -> Vec<point::Point> {
+    pub fn generate_line(&self, root: &point::Point, is_horizontal: bool, length: usize) -> Vec<point::Point> {
         let line: Vec<point::Point>;
 
         if is_horizontal && !(root.x + length >= self.width && root.x + length < self.width) {
@@ -45,11 +45,15 @@ impl Lattice {
         return line;
     }
 
-    pub fn generate_segment(&mut self) -> wall::Wall {
-        let mut root = self.generate_wall();
-        root.child = self.generate_child(&root);
+    pub fn generate_wall(&self) -> wall::Wall {
+        let root = point::Point::new(rand::thread_rng().gen_range(0..self.height) as usize,
+                                     rand::thread_rng().gen_range(0..self.width) as usize);
+        let length = rand::thread_rng().gen_range(1..5) as usize;
+        let is_horizontal = rand::thread_rng().gen_range(0..2) != 0;
 
-        return root;
+        let line = self.generate_line(&root, is_horizontal, length);
+        
+        return wall::Wall::new(line, length, is_horizontal, None);
     }
 
     fn generate_child(&self, wall: &wall::Wall) -> Option<Box<wall::Wall>> {
@@ -58,21 +62,27 @@ impl Lattice {
             return None;
         } else {
             let child_length = rand::thread_rng().gen_range(1..5) as usize;
-            let line = self.draw_line(&wall.points[child_index as usize], !wall.is_horizontal, child_length);
+            let line = self.generate_line(&wall.points[child_index as usize], !wall.is_horizontal, child_length);
 
             return Some(Box::new(wall::Wall::new(line, child_length, !wall.is_horizontal, None)));
         }
     }
 
-    pub fn generate_wall(&self) -> wall::Wall {
-        let root = point::Point::new(rand::thread_rng().gen_range(0..self.height) as usize,
-                                     rand::thread_rng().gen_range(0..self.width) as usize);
-        let length = rand::thread_rng().gen_range(1..5) as usize;
-        let is_horizontal = rand::thread_rng().gen_range(0..2) != 0;
+    pub fn generate_segment(&mut self) -> wall::Wall {
+        let mut root = self.generate_wall();
+        root.child = self.generate_child(&root);
 
-        let line = self.draw_line(&root, is_horizontal, length);
+        if !root.child.is_none() {
+            let mut first_child = root.child.unwrap();
+            if first_child.length > 1 {
+                first_child.child = self.generate_child(&first_child);
+            }
+            root.child = Some(first_child);
         
-        return wall::Wall::new(line, length, is_horizontal, None);
+            
+        }
+
+        return root;
     }
 }
 
